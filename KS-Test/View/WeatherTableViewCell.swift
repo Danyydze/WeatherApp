@@ -21,13 +21,16 @@ class WeatherTableViewCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .bold)
         label.numberOfLines = 0
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
         return label
     }()
-    
+
     private let timeLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14)
         label.textColor = .gray
+        label.numberOfLines = 0
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
         return label
     }()
     
@@ -101,9 +104,12 @@ class WeatherTableViewCell: UITableViewCell {
             weatherIcon.widthAnchor.constraint(equalToConstant: 50),
             weatherIcon.heightAnchor.constraint(equalToConstant: 50),
             
-            stackView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(lessThanOrEqualTo: weatherIcon.leadingAnchor, constant: -20)
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 25),
+            
+            weatherIcon.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 8),
+            weatherIcon.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8)
         ])
     }
 }

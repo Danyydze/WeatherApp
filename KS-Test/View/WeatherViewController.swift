@@ -19,6 +19,9 @@ class WeatherViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupBindings()
+        
+        tableView.estimatedRowHeight = 100
+        tableView.rowHeight = UITableView.automaticDimension
     }
     
     // MARK: - Setup
@@ -32,7 +35,31 @@ class WeatherViewController: UIViewController {
     private func configureSearchTextField() {
         searchTextField.placeholder = "Введите город"
         searchTextField.borderStyle = .roundedRect
-        searchTextField.delegate = self
+        searchTextField.textColor = .black
+        searchTextField.backgroundColor = .systemGray6
+        
+        let placeholderAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.systemGray2
+        ]
+        searchTextField.attributedPlaceholder = NSAttributedString(
+            string: "Введите город",
+            attributes: placeholderAttributes
+        )
+        
+        let magnifyingGlassImage = UIImage(systemName: "magnifyingglass")?
+            .withTintColor(.systemGray2, renderingMode: .alwaysOriginal)
+        
+        let iconView = UIImageView(image: magnifyingGlassImage)
+        iconView.contentMode = .scaleAspectFit
+        
+        let iconContainer = UIView(frame: CGRect(x: 0, y: 0, width: 40, height: 30))
+        iconView.frame = CGRect(x: 10, y: 5, width: 20, height: 20)
+        iconContainer.addSubview(iconView)
+        
+        searchTextField.leftView = iconContainer
+        searchTextField.leftViewMode = .always
+        searchTextField.leftView?.layer.cornerRadius = searchTextField.layer.cornerRadius
+        
         view.addSubview(searchTextField)
     }
     
