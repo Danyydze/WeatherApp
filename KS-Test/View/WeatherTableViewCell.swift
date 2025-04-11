@@ -5,13 +5,6 @@
 //  Created by Данил Марков on 09.04.2025.
 //
 
-//
-//  WeatherTableViewCell.swift
-//  KS-Test
-//
-//  Created by Данил Марков on 09.04.2025.
-//
-
 import UIKit
 
 class WeatherTableViewCell: UITableViewCell {

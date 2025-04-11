@@ -10,6 +10,7 @@ import UIKit
 class WeatherViewController: UIViewController {
     
     // MARK: - UI Elements
+    private let titleLabel = UILabel()
     private let tableView = UITableView()
     private let searchTextField = UITextField()
     private let viewModel = WeatherViewModel()
@@ -29,37 +30,22 @@ class WeatherViewController: UIViewController {
         view.backgroundColor = .white
         configureSearchTextField()
         configureTableView()
+        configureHeadLabel()
         applyConstraints()
     }
     
+    private func configureHeadLabel() {
+        titleLabel.text = "Погода"
+        titleLabel.textColor = .black
+        titleLabel.font = .systemFont(ofSize: 28, weight: .bold)
+        titleLabel.textAlignment = .left
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleLabel)
+    }
+    
     private func configureSearchTextField() {
-        searchTextField.placeholder = "Введите город"
-        searchTextField.borderStyle = .roundedRect
-        searchTextField.textColor = .black
-        searchTextField.backgroundColor = .systemGray6
-        
-        let placeholderAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.systemGray2
-        ]
-        searchTextField.attributedPlaceholder = NSAttributedString(
-            string: "Введите город",
-            attributes: placeholderAttributes
-        )
-        
-        let magnifyingGlassImage = UIImage(systemName: "magnifyingglass")?
-            .withTintColor(.systemGray2, renderingMode: .alwaysOriginal)
-        
-        let iconView = UIImageView(image: magnifyingGlassImage)
-        iconView.contentMode = .scaleAspectFit
-        
-        let iconContainer = UIView(frame: CGRect(x: 0, y: 0, width: 40, height: 30))
-        iconView.frame = CGRect(x: 10, y: 5, width: 20, height: 20)
-        iconContainer.addSubview(iconView)
-        
-        searchTextField.leftView = iconContainer
-        searchTextField.leftViewMode = .always
-        searchTextField.leftView?.layer.cornerRadius = searchTextField.layer.cornerRadius
-        
+        searchTextField.delegate = self
+        SearchTextFieldConfigurator.configure(searchTextField)
         view.addSubview(searchTextField)
     }
     
@@ -74,7 +60,11 @@ class WeatherViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            searchTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
+            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -25),
+            
+            searchTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
