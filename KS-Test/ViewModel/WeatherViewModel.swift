@@ -1,9 +1,10 @@
 //
 //  WeatherViewModel.swift
-//  KS-Test
+//  WeatherApp
 //
 //  Created by Данил Марков on 09.04.2025.
 //
+
 import Foundation
 
 class WeatherViewModel {
@@ -12,6 +13,7 @@ class WeatherViewModel {
     private struct Constants {
         static let networkErrorMessage = "Ошибка сети"
         static let cityNotFoundMessage = "Город не найден"
+        static let duplicateCityMessage = "Город '%@' уже добавлен"
     }
     
     // MARK: - Properties
@@ -35,13 +37,24 @@ class WeatherViewModel {
     
     // MARK: - Public Methods
     func searchCity(_ city: String) {
-        weatherService.fetchWeather(city: city) { [weak self] result in
-            self?.handleSearchResult(result, for: city)
+        let normalizedCity = city
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        
+        guard !normalizedCity.isEmpty else { return }
+        
+        if isCityAlreadyAdded(normalizedCity) {
+            onError?(String(format: Constants.duplicateCityMessage, city))
+            return
+        }
+        
+        weatherService.fetchWeather(city: normalizedCity) { [weak self] result in
+            self?.handleSearchResult(result, city: normalizedCity)
         }
     }
     
     // MARK: - Private Methods
-    private func handleSearchResult(_ result: Result<WeatherResponse, Error>, for city: String) {
+    private func handleSearchResult(_ result: Result<WeatherResponse, Error>, city: String) {
         DispatchQueue.main.async { [weak self] in
             switch result {
             case .success(let response):
@@ -59,6 +72,12 @@ class WeatherViewModel {
             cityStorage.addCity(city)
             weatherData.insert(response, at: 0)
             onDataUpdate?()
+        }
+    }
+    
+    private func isCityAlreadyAdded(_ city: String) -> Bool {
+        weatherData.contains { existingCity in
+            existingCity.location?.name.lowercased() == city
         }
     }
     
