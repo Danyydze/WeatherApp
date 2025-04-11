@@ -14,7 +14,7 @@
 		8C01744F2DA6B61D000799A8 /* Exceptions for "KS-Test" folder in "KS-Test" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				"Additional files/Info.plist",
 			);
 			target = 8C01743C2DA6B61B000799A8 /* KS-Test */;
 		};
