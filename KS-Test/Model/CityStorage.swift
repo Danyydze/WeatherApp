@@ -21,9 +21,28 @@ class CityStorage: CityStorageProtocol {
     
     func addCity(_ city: String) {
         var cities = loadCities()
-        if !cities.contains(city) {
-            cities.insert(city, at: 0)
+        let normalizedCity = city
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        
+        if !cities.contains(normalizedCity) {
+            cities.insert(normalizedCity, at: 0)
             saveCities(cities)
         }
+    }
+    
+    func removeCity(_ city: String) {
+        var cities = loadCities()
+        let normalizedInput = city
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        
+        cities.removeAll { existingCity in
+            existingCity
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased() == normalizedInput
+        }
+        
+        saveCities(cities)
     }
 }

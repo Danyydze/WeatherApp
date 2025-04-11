@@ -1,6 +1,6 @@
 //
 //  SearchTextFieldConfigurator.swift
-//  WeatherApp
+//  KS-Test
 //
 //  Created by User Name on 09.04.2025.
 //

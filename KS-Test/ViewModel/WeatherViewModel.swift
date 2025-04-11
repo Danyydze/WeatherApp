@@ -1,6 +1,6 @@
 //
 //  WeatherViewModel.swift
-//  WeatherApp
+//  KS-Test
 //
 //  Created by Данил Марков on 09.04.2025.
 //
@@ -50,6 +50,19 @@ class WeatherViewModel {
         
         weatherService.fetchWeather(city: normalizedCity) { [weak self] result in
             self?.handleSearchResult(result, city: normalizedCity)
+        }
+    }
+    
+    func deleteCity(at index: Int) {
+        guard weatherData.indices.contains(index),
+              let cityName = weatherData[index].location?.name else { return }
+        
+        let normalizedCity = cityName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        
+        cityStorage.removeCity(normalizedCity)
+        weatherData.remove(at: index)
+        DispatchQueue.main.async { [weak self] in
+            self?.onDataUpdate?()
         }
     }
     

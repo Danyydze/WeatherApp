@@ -10,7 +10,6 @@ import UIKit
 class WeatherViewController: UIViewController {
     
     // MARK: - UI Elements
-    private let titleLabel = UILabel()
     private let tableView = UITableView()
     private let searchTextField = UITextField()
     private let viewModel = WeatherViewModel()
@@ -20,9 +19,7 @@ class WeatherViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupBindings()
-        
-        tableView.estimatedRowHeight = 100
-        tableView.rowHeight = UITableView.automaticDimension
+        configureTableViewSettings()
     }
     
     // MARK: - Setup
@@ -30,17 +27,12 @@ class WeatherViewController: UIViewController {
         view.backgroundColor = .white
         configureSearchTextField()
         configureTableView()
-        configureHeadLabel()
         applyConstraints()
     }
     
-    private func configureHeadLabel() {
-        titleLabel.text = "Погода"
-        titleLabel.textColor = .black
-        titleLabel.font = .systemFont(ofSize: 28, weight: .bold)
-        titleLabel.textAlignment = .left
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(titleLabel)
+    private func configureTableViewSettings() {
+        tableView.estimatedRowHeight = 80
+        tableView.rowHeight = UITableView.automaticDimension
     }
     
     private func configureSearchTextField() {
@@ -52,6 +44,7 @@ class WeatherViewController: UIViewController {
     private func configureTableView() {
         tableView.register(WeatherTableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.dataSource = self
+        tableView.delegate = self
         view.addSubview(tableView)
     }
     
@@ -60,11 +53,7 @@ class WeatherViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 25),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -25),
-            
-            searchTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            searchTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
@@ -75,13 +64,18 @@ class WeatherViewController: UIViewController {
         ])
     }
     
+    // MARK: - Bindings
     private func setupBindings() {
         viewModel.onDataUpdate = { [weak self] in
             self?.tableView.reloadData()
         }
         
         viewModel.onError = { [weak self] message in
-            let alert = UIAlertController(title: "Ошибка", message: message, preferredStyle: .alert)
+            let alert = UIAlertController(
+                title: message.contains("уже добавлен") ? "Информация" : "Ошибка",
+                message: message,
+                preferredStyle: .alert
+            )
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             self?.present(alert, animated: true)
         }
@@ -101,11 +95,43 @@ extension WeatherViewController: UITableViewDataSource {
     }
 }
 
+// MARK: - UITableViewDelegate
+extension WeatherViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let deleteAction = UIContextualAction(
+            style: .destructive,
+            title: "Удалить"
+        ) { [weak self] _, _, completion in
+            guard let self = self,
+                  self.viewModel.weatherData.indices.contains(indexPath.row) else {
+                completion(false)
+                return
+            }
+            
+            if let cell = tableView.cellForRow(at: indexPath) {
+                UIView.animate(withDuration: 0.3, animations: {
+                    cell.frame.origin.x = -cell.frame.width
+                }) { _ in
+                    self.viewModel.deleteCity(at: indexPath.row)
+                    tableView.deleteRows(at: [indexPath], with: .none)
+                }
+            }
+            completion(true)
+        }
+        
+        return UISwipeActionsConfiguration(actions: [deleteAction])
+    }
+}
+
 // MARK: - UITextFieldDelegate
 extension WeatherViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        guard let query = textField.text?.trimmingCharacters(in: .whitespaces), !query.isEmpty else { return true }
+        guard let query = textField.text?.trimmingCharacters(in: .whitespaces), !query.isEmpty else {
+            return true
+        }
         viewModel.searchCity(query)
+        textField.text = ""
         textField.resignFirstResponder()
         return true
     }

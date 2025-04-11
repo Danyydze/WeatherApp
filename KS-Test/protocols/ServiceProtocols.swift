@@ -13,4 +13,5 @@ protocol CityStorageProtocol {
     func saveCities(_ cities: [String])
     func loadCities() -> [String]
     func addCity(_ city: String)
+    func removeCity(_ city: String)
 }
