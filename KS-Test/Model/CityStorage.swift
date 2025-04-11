@@ -7,7 +7,7 @@
 
 import Foundation
 
-class CityStorage {
+class CityStorage: CityStorageProtocol {
     static let shared = CityStorage()
     private let key = "savedCities"
     

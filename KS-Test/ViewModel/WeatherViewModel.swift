@@ -4,6 +4,7 @@
 //
 //  Created by Данил Марков on 09.04.2025.
 //
+import Foundation
 
 class WeatherViewModel {
     
@@ -23,8 +24,10 @@ class WeatherViewModel {
     var onError: ((String) -> Void)?
     
     // MARK: - Initialization
-    init(weatherService: WeatherServiceProtocol = WeatherService(),
-         cityStorage: CityStorageProtocol = CityStorage.shared) {
+    init(
+        weatherService: WeatherServiceProtocol = WeatherService(),
+        cityStorage: CityStorageProtocol = CityStorage.shared
+    ) {
         self.weatherService = weatherService
         self.cityStorage = cityStorage
         loadSavedCities()
@@ -39,32 +42,35 @@ class WeatherViewModel {
     
     // MARK: - Private Methods
     private func handleSearchResult(_ result: Result<WeatherResponse, Error>, for city: String) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             switch result {
             case .success(let response):
-                self.handleSuccessResponse(response, city: city)
+                self?.handleSuccessResponse(response, city: city)
             case .failure:
-                self.onError?(Constants.networkErrorMessage)
+                self?.onError?(Constants.networkErrorMessage)
             }
         }
     }
     
     private func handleSuccessResponse(_ response: WeatherResponse, city: String) {
         if response.error != nil {
-            self.onError?(Constants.cityNotFoundMessage)
+            onError?(Constants.cityNotFoundMessage)
         } else if response.location != nil {
-            self.cityStorage.addCity(city)
-            self.weatherData.insert(response, at: 0)
-            self.onDataUpdate?()
+            cityStorage.addCity(city)
+            weatherData.insert(response, at: 0)
+            onDataUpdate?()
         }
     }
     
     private func loadSavedCities() {
-        cityStorage.loadCities().forEach { city in
+        let cities = cityStorage.loadCities()
+        cities.forEach { city in
             weatherService.fetchWeather(city: city) { [weak self] result in
                 if case .success(let response) = result, response.error == nil {
-                    self?.weatherData.append(response)
-                    self?.onDataUpdate?()
+                    DispatchQueue.main.async {
+                        self?.weatherData.append(response)
+                        self?.onDataUpdate?()
+                    }
                 }
             }
         }

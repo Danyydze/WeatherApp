@@ -5,6 +5,13 @@
 //  Created by Данил Марков on 09.04.2025.
 //
 
+//
+//  WeatherTableViewCell.swift
+//  KS-Test
+//
+//  Created by Данил Марков on 09.04.2025.
+//
+
 import UIKit
 
 class WeatherTableViewCell: UITableViewCell {
@@ -13,6 +20,7 @@ class WeatherTableViewCell: UITableViewCell {
     private let cityLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.numberOfLines = 0
         return label
     }()
     
@@ -32,6 +40,7 @@ class WeatherTableViewCell: UITableViewCell {
     private let weatherIcon: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
+        iv.clipsToBounds = true
         return iv
     }()
     
@@ -52,9 +61,25 @@ class WeatherTableViewCell: UITableViewCell {
         temperatureLabel.text = "\(data.current?.temp_c ?? 0)°C"
         
         if let iconPath = data.current?.condition.icon {
-            let fullURL = "https:" + iconPath
-            weatherIcon.sd_setImage(with: URL(string: fullURL))
+            loadImage(from: "https:" + iconPath)
         }
+    }
+    
+    // MARK: - Image Loading
+    private func loadImage(from urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+            guard let self = self,
+                  let data = data,
+                  error == nil,
+                  let image = UIImage(data: data)
+            else { return }
+            
+            DispatchQueue.main.async {
+                self.weatherIcon.image = image
+            }
+        }.resume()
     }
     
     // MARK: - Layout
@@ -62,6 +87,7 @@ class WeatherTableViewCell: UITableViewCell {
         let stackView = UIStackView(arrangedSubviews: [cityLabel, timeLabel, temperatureLabel])
         stackView.axis = .vertical
         stackView.spacing = 4
+        stackView.alignment = .leading
         
         contentView.addSubview(stackView)
         contentView.addSubview(weatherIcon)
@@ -72,12 +98,12 @@ class WeatherTableViewCell: UITableViewCell {
         NSLayoutConstraint.activate([
             weatherIcon.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             weatherIcon.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            weatherIcon.widthAnchor.constraint(equalToConstant: 40),
-            weatherIcon.heightAnchor.constraint(equalToConstant: 40),
+            weatherIcon.widthAnchor.constraint(equalToConstant: 50),
+            weatherIcon.heightAnchor.constraint(equalToConstant: 50),
             
             stackView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(lessThanOrEqualTo: weatherIcon.leadingAnchor, constant: -16)
+            stackView.trailingAnchor.constraint(lessThanOrEqualTo: weatherIcon.leadingAnchor, constant: -20)
         ])
     }
 }

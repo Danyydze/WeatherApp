@@ -6,8 +6,8 @@
 //
 
 struct WeatherResponse: Codable {
-    let location: Location
-    let current: Current
+    let location: Location?
+    let current: Current?
     let error: WeatherError?
 }
 
