@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  WeatherViewController.swift
 //  KS-Test
 //
 //  Created by Данил Марков on 09.04.2025.
@@ -84,13 +84,23 @@ class WeatherViewController: UIViewController {
 
 // MARK: - UITableViewDataSource
 extension WeatherViewController: UITableViewDataSource {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        viewModel.forecastData.count
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        viewModel.cityName(for: section)
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewModel.weatherData.count
+        viewModel.forecastData[section].forecast?.forecastday.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! WeatherTableViewCell
-        cell.configure(with: viewModel.weatherData[indexPath.row])
+        if let day = viewModel.dayData(for: indexPath.section, dayIndex: indexPath.row) {
+            cell.configure(with: day)
+        }
         return cell
     }
 }
@@ -103,20 +113,7 @@ extension WeatherViewController: UITableViewDelegate {
             style: .destructive,
             title: "Удалить"
         ) { [weak self] _, _, completion in
-            guard let self = self,
-                  self.viewModel.weatherData.indices.contains(indexPath.row) else {
-                completion(false)
-                return
-            }
-            
-            if let cell = tableView.cellForRow(at: indexPath) {
-                UIView.animate(withDuration: 0.3, animations: {
-                    cell.frame.origin.x = -cell.frame.width
-                }) { _ in
-                    self.viewModel.deleteCity(at: indexPath.row)
-                    tableView.deleteRows(at: [indexPath], with: .none)
-                }
-            }
+            self?.viewModel.deleteCity(at: indexPath.section)
             completion(true)
         }
         

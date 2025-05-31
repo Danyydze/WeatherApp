@@ -19,7 +19,7 @@ class WeatherViewModel {
     // MARK: - Properties
     private let weatherService: WeatherServiceProtocol
     private let cityStorage: CityStorageProtocol
-    private(set) var weatherData: [WeatherResponse] = []
+    private(set) var forecastData: [WeatherResponse] = []
     
     // MARK: - Callbacks
     var onDataUpdate: (() -> Void)?
@@ -54,16 +54,28 @@ class WeatherViewModel {
     }
     
     func deleteCity(at index: Int) {
-        guard weatherData.indices.contains(index),
-              let cityName = weatherData[index].location?.name else { return }
+        guard forecastData.indices.contains(index),
+              let cityName = forecastData[index].location?.name else { return }
         
         let normalizedCity = cityName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         
         cityStorage.removeCity(normalizedCity)
-        weatherData.remove(at: index)
+        forecastData.remove(at: index)
         DispatchQueue.main.async { [weak self] in
             self?.onDataUpdate?()
         }
+    }
+    
+    func cityName(for section: Int) -> String {
+        guard section < forecastData.count else { return "" }
+        return forecastData[section].location?.name ?? ""
+    }
+    
+    func dayData(for section: Int, dayIndex: Int) -> ForecastDay? {
+        guard section < forecastData.count,
+              let days = forecastData[section].forecast?.forecastday,
+              dayIndex < days.count else { return nil }
+        return days[dayIndex]
     }
     
     // MARK: - Private Methods
@@ -81,15 +93,15 @@ class WeatherViewModel {
     private func handleSuccessResponse(_ response: WeatherResponse, city: String) {
         if response.error != nil {
             onError?(Constants.cityNotFoundMessage)
-        } else if response.location != nil {
+        } else if response.location != nil && response.forecast != nil {
             cityStorage.addCity(city)
-            weatherData.insert(response, at: 0)
+            forecastData.insert(response, at: 0)
             onDataUpdate?()
         }
     }
     
     private func isCityAlreadyAdded(_ city: String) -> Bool {
-        weatherData.contains { existingCity in
+        forecastData.contains { existingCity in
             existingCity.location?.name.lowercased() == city
         }
     }
@@ -98,9 +110,13 @@ class WeatherViewModel {
         let cities = cityStorage.loadCities()
         cities.forEach { city in
             weatherService.fetchWeather(city: city) { [weak self] result in
-                if case .success(let response) = result, response.error == nil {
+                if case .success(let response) = result,
+                   response.error == nil,
+                   response.location != nil,
+                   response.forecast != nil {
+                    
                     DispatchQueue.main.async {
-                        self?.weatherData.append(response)
+                        self?.forecastData.append(response)
                         self?.onDataUpdate?()
                     }
                 }
