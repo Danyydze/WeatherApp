@@ -12,7 +12,7 @@ class WeatherService: WeatherServiceProtocol {
     
     func fetchWeather(city: String, completion: @escaping (Result<WeatherResponse, Error>) -> Void) {
         let encodedCity = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "https://api.weatherapi.com/v1/current.json?key=\(apiKey)&q=\(encodedCity)"
+        let urlString = "https://api.weatherapi.com/v1/forecast.json?key=\(apiKey)&q=\(encodedCity)&days=5"
         
         guard let url = URL(string: urlString) else { return }
         

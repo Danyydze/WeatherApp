@@ -10,26 +10,36 @@ import UIKit
 class WeatherTableViewCell: UITableViewCell {
     
     // MARK: - UI Elements
-    private let cityLabel: UILabel = {
+    private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.numberOfLines = 0
-        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        label.font = .systemFont(ofSize: 16, weight: .semibold)
         return label
     }()
-
-    private let timeLabel: UILabel = {
+    
+    private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14)
-        label.textColor = .gray
-        label.numberOfLines = 0
-        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        label.textColor = .darkGray
         return label
     }()
     
     private let temperatureLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 24, weight: .medium)
+        label.font = .systemFont(ofSize: 18, weight: .medium)
+        return label
+    }()
+    
+    private let windLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .gray
+        return label
+    }()
+    
+    private let humidityLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .gray
         return label
     }()
     
@@ -51,12 +61,15 @@ class WeatherTableViewCell: UITableViewCell {
     }
     
     // MARK: - Configuration
-    func configure(with data: WeatherResponse) {
-        cityLabel.text = data.location?.name ?? ""
-        timeLabel.text = data.location?.localtime ?? ""
-        temperatureLabel.text = "\(data.current?.temp_c ?? 0)°C"
+    func configure(with day: ForecastDay) {
+        dateLabel.text = formatDate(day.date)
+        descriptionLabel.text = day.day.condition.text
+        temperatureLabel.text = "\(day.day.avgtemp_c)°C"
+        windLabel.text = "Ветер: \(day.day.maxwind_kph) км/ч"
+        humidityLabel.text = "Влажность: \(day.day.avghumidity)%"
         
-        if let iconPath = data.current?.condition.icon {
+        let iconPath = day.day.condition.icon
+        if !iconPath.isEmpty {
             loadImage(from: "https:" + iconPath)
         }
     }
@@ -78,31 +91,45 @@ class WeatherTableViewCell: UITableViewCell {
         }.resume()
     }
     
+    // MARK: - Date Formatting
+    private func formatDate(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: dateString) else { return dateString }
+        
+        formatter.dateFormat = "dd MMMM"
+        formatter.locale = Locale(identifier: "ru_RU")
+        return formatter.string(from: date)
+    }
+    
     // MARK: - Layout
     private func setupLayout() {
-        let stackView = UIStackView(arrangedSubviews: [cityLabel, timeLabel, temperatureLabel])
-        stackView.axis = .vertical
-        stackView.spacing = 4
-        stackView.alignment = .leading
+        let infoStack = UIStackView(arrangedSubviews: [temperatureLabel, windLabel, humidityLabel])
+        infoStack.axis = .vertical
+        infoStack.spacing = 4
+        infoStack.alignment = .leading
         
-        contentView.addSubview(stackView)
-        contentView.addSubview(weatherIcon)
+        let textStack = UIStackView(arrangedSubviews: [dateLabel, descriptionLabel, infoStack])
+        textStack.axis = .vertical
+        textStack.spacing = 8
         
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        weatherIcon.translatesAutoresizingMaskIntoConstraints = false
+        let mainStack = UIStackView(arrangedSubviews: [textStack, weatherIcon])
+        mainStack.axis = .horizontal
+        mainStack.distribution = .fill
+        mainStack.alignment = .center
+        mainStack.spacing = 16
+        
+        contentView.addSubview(mainStack)
+        mainStack.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            weatherIcon.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            weatherIcon.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            mainStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            mainStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
+            mainStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            mainStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            
             weatherIcon.widthAnchor.constraint(equalToConstant: 50),
-            weatherIcon.heightAnchor.constraint(equalToConstant: 50),
-            
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 25),
-            
-            weatherIcon.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 8),
-            weatherIcon.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8)
+            weatherIcon.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
 }
